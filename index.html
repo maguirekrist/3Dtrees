@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D L-TREE</title>
+</head>
+<body>
+    <canvas id="c" width="1000" height="1000"></canvas>
+    <script type="module">
+        import * as THREE from './node_modules/three/build/three.module.js'
+
+        const START = 'A';
+        const N = 7;
+        const ang = 22.5 * (Math.PI / 180);
+        let turtle = new THREE.Vector3(0, 0, 0);
+
+        const instructions = { 
+            'A': `[&FL!A]/////'[&FL!A]///////'[&FL!A]`,
+            'F': `S/////F`,
+            'S': `FL`,
+            'L': `['''^^{-f+f+f-|-f+f+f}]`
+        }
+
+        function generateLString(input) {
+            let temp = input;
+            for(let i = 0; i < N; i++) {
+                for(let z = 0; z < temp.length; z++) {
+
+                    if(instructions[temp[z]] !== undefined && instructions[temp[z]].length) {
+                        console.log(instructions[temp[z]]);
+                        let k = temp.substr(z + 1, temp.length);
+                        temp = temp.substr(0, z) + instructions[temp[z]] + k;
+                        z = z + instructions[temp[z]].length - 1;
+                    }
+                }
+            }
+            return temp;
+        }
+
+        function generateLData3D(input) {
+            console.log(input);
+            const travel = 2;
+            // const heading = new THREE.Vector3(0, travel, 0);
+            // const left = new THREE.Vector3(travel, 0, 0);
+            // const up = new THREE.Vector3().multiplyVectors(heading, left);
+            
+            let rotation = new THREE.Matrix3();
+            roation.set( 
+                1, 0, 0,
+                0, 1, 0,
+                0, 0, 1)
+            
+            const move = new THREE.Vector(0, travel, 0);
+
+            // const key = {
+            //     '+': () => { rotation = multiplyRu(rotation, ang)},
+            //     '-': () => { rotation = multiplyRu(rotation, -ang) },
+            //     '&': () => { rotation = multiplyRl(rotation, ang) },
+            //     '^': () => { rotation = multiplyRl(rotation, -ang) },
+            //     "/": () => { rotation = multiplyRh(rotation, -ang) },
+            //     '|': () => { rotation = multiplyRu(rotation, 180 * (Math.PI / 180)) },
+            //     'F': () => { turtle = (turtle.applyMatrix3(rotation)).add(move) },
+            //     'f': () => { turtle = (turtle.applyMatrix3(rotation)).add(move) }
+            // }
+
+            let turtleState = [];
+
+            for(let i = 0; i < input.length; i++) {
+                switch(input[i]) {
+                    case '+':
+                        rotation = multiplyRu(rotation, ang);
+                        break;
+                    case '-':
+                        rotation = multiplyRu(rotation, -ang);
+                        break;
+                    case '&':
+                        rotation = multiplyRl(rotation, ang);
+                        break;
+                    case '^':
+                        rotation = multiplyRl(rotation, -ang);
+                        break;
+                    case '/':
+                        rotation = multiplyRh(rotation, -ang);
+                        break;
+                    case '|':
+                        rotation = multiplyRu(rotation, 180 * (Math.PI / 180));
+                        break;
+                    case 'F':
+                        turtle = (turtle.applyMatrix3(rotation)).add(move);
+                        break;
+                    case 'f':
+                        turtle = (turtle.applyMatrix3(rotation)).add(move);
+                        break;
+                }
+            }
+            
+            function multiplyRu(matrix, angle) {
+                const R = new THREE.Matrix3(
+                    Math.cos() * angle, Math.sin() * angle, 0,
+                    -Math.sin() * angle, Math.cos() * angle, 0,
+                    0, 0, 1
+                );
+                return matrix.multiplyMatrices(matrix, R);
+            }
+
+            function multiplyRl(matrix, angle) {
+                const R = new THREE.Matrix3(
+                    Math.cos() * angle, 0, -Math.sin() * angle,
+                    0, 1, 0,
+                    Math.sin() * angle, 0, Math.cos() * angle
+                );
+                return matrix.multiplyMatrices(matrix, R);
+            }
+
+            function multiplyRh(matrix, angle) {
+                const R = new THREE.Matrix3(
+                    1, 0, 0,
+                    0, Math.cos() * angle, -Math.sin() * angle,
+                    0, Math.sin() * angle, Math.cos() * angle
+                );
+                return matrix.multiplyMatrices(matrix, R);
+            }
+
+
+        }
+
+        (function main() {
+            
+            const canvas = document.querySelector('#c');
+            const renderer = new THREE.WebGLRenderer({ canvas });
+
+            const camera = createCamera(75, 1, 0.1, 5);
+            camera.position.z = 2;
+            camera.position.y = 1;
+            camera.rotation.x = -0.5;
+            const scene = new THREE.Scene();
+            const cube = new THREE.Mesh(getBoxGeo(1, 1, 1), getColorMaterial(0x44aa88));
+            scene.add(cube);
+
+            generateLData3D(generateLString(START));
+            
+            function render(time) {
+                time *= 0.001;
+
+                // camera.position.x = time;
+                // cube.rotation.y = time;
+                cube.position.x = turtle.x;
+                cube.position.y = turtle.y;
+                cube.position.z = turtle.z;
+                renderer.render(scene, camera);
+                
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+        })();
+
+        function getRand(min, max) {
+            return Math.floor(Math.random() * (max - min) + min)
+        }
+
+        function createCamera(fov, aspect, near, far) {
+            return new THREE.PerspectiveCamera(fov, aspect, near, far);
+        }
+
+        function getBoxGeo(boxWidth, boxHeight, boxDepth) {
+            return new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+        }
+
+        function getColorMaterial(color) {
+            return new THREE.MeshBasicMaterial({ color: color });
+        }
+    </script>
+</body>
+</html>
