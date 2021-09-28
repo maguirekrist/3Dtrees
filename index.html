@@ -27,12 +27,11 @@
             let temp = input;
             for(let i = 0; i < N; i++) {
                 for(let z = 0; z < temp.length; z++) {
-
-                    if(instructions[temp[z]] !== undefined && instructions[temp[z]].length) {
-                        console.log(instructions[temp[z]]);
+                    let letter = temp[z];
+                    if(instructions[letter]) {
                         let k = temp.substr(z + 1, temp.length);
-                        temp = temp.substr(0, z) + instructions[temp[z]] + k;
-                        z = z + instructions[temp[z]].length - 1;
+                        temp = temp.substr(0, z) + instructions[letter] + k;
+                        z = z + instructions[letter].length - 1;
                     }
                 }
             }
@@ -47,7 +46,7 @@
             // const up = new THREE.Vector3().multiplyVectors(heading, left);
             
             let rotation = new THREE.Matrix3();
-            roation.set( 
+            rotation.set( 
                 1, 0, 0,
                 0, 1, 0,
                 0, 0, 1)
@@ -97,7 +96,8 @@
             }
             
             function multiplyRu(matrix, angle) {
-                const R = new THREE.Matrix3(
+                const R = new THREE.Matrix3();
+                R.set(
                     Math.cos() * angle, Math.sin() * angle, 0,
                     -Math.sin() * angle, Math.cos() * angle, 0,
                     0, 0, 1
@@ -106,7 +106,8 @@
             }
 
             function multiplyRl(matrix, angle) {
-                const R = new THREE.Matrix3(
+                const R = new THREE.Matrix3();
+                R.set(
                     Math.cos() * angle, 0, -Math.sin() * angle,
                     0, 1, 0,
                     Math.sin() * angle, 0, Math.cos() * angle
@@ -115,7 +116,8 @@
             }
 
             function multiplyRh(matrix, angle) {
-                const R = new THREE.Matrix3(
+                const R = new THREE.Matrix3();
+                R.set(
                     1, 0, 0,
                     0, Math.cos() * angle, -Math.sin() * angle,
                     0, Math.sin() * angle, Math.cos() * angle
